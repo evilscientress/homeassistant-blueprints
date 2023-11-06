@@ -2,7 +2,7 @@ blueprint:
   name: Ally External Temperatur Sensor
   description: Automation blueprint for the external temperature sensor feature of Danfoss Ally Zigbee radiator thermostats.
   domain: automation
-  source_url: https://github.com/evilscientress/homeassistant-blueprints/blob/main/automation/ally_external_temperatur_sensor.yaml
+  source_url: https://github.com/evilscientress/homeassistant-blueprints/blob/main/gally_external_temperatur_sensor.yaml
   author: EvilScientress
   input:
     external_temperature_numbers:
