@@ -1,0 +1,43 @@
+blueprint:
+  name: Ally Load Balancing
+  description: Automation blueprint for the load balancing feature of Danfoss Ally Zigbee radiator thermostats.
+  domain: automation
+  input:
+    load_estimates:
+      name: Thermostat Load Estimates
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            integration: mqtt
+          multiple: true
+    mean_room_loads:
+      name: Mean Room Load Entities
+      selector:
+        entity:
+          filter:
+            domain: number
+          multiple: true
+variables:
+  load_estimates: !input load_estimates
+  mean_room_loads: !input mean_room_loads
+trigger:
+  - platform: template
+    value_template: >-
+      {% set automation_entity_id = this.entity_id %}
+      {{ state_attr(automation_entity_id, 'last_triggered') is not none and (now() - state_attr(automation_entity_id, 'last_triggered') > timedelta(minutes=30)) }}
+  - platform: homeassistant
+    event: start
+condition: []
+action:
+  - service: number.set_value
+    target:
+      entity_id: !input mean_room_loads
+    data:
+      value: >-
+        {% set ns = namespace(load_sum=0.0) %}
+        {% for load in load_estimates %}
+          {% set ns.load_sum = ns.load_sum + float(states(load)) %}
+        {% endfor %}
+        {{ int(ns.load_sum / load_estimates|length) }}
+mode: single

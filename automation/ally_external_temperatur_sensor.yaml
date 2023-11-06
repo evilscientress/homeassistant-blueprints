@@ -1,0 +1,71 @@
+blueprint:
+  name: Ally External Temperatur Sensor
+  description: Automation blueprint for the external temperature sensor feature of Danfoss Ally Zigbee radiator thermostats.
+  domain: automation
+  input:
+    external_temperature_numbers:
+      name: Thermostat External Temperature Inputs
+      selector:
+        entity:
+          filter:
+            domain: number
+            integration: mqtt
+          multiple: true
+    temperature_sensor_entity:
+      name: Temperature Sensor
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            device_class: temperature
+          multiple: false
+    is_covered:
+      name: Is the thermostat in covered mode?
+      selector:
+        boolean:
+      default: false
+    max_interval_not_covered:
+      name: Max interval in not covered mode.
+      description: >
+        The interval between sending the external sensor value to the thermostat if it did not changed.
+        The value must be transmitted at most every 30 minutes and at least every 3h.
+      selector:
+        number:
+          min: 30
+          max: 180
+          unit_of_measurement: minutes
+      default: 175
+variables:
+  external_temperature_numbers: !input external_temperature_numbers
+  temperature_sensor_entity: !input temperature_sensor_entity
+  is_covered: !input is_covered
+trigger_variables:
+  external_temperature_numbers: !input external_temperature_numbers
+  temperature_sensor_entity: !input temperature_sensor_entity
+  is_covered: !input is_covered
+  max_interval_not_covered: !input max_interval_not_covered
+trigger:
+  - platform: template
+    value_template: >-
+      {% set min_wait = 5 if is_covered else 30 %}
+      {% set max_wait = 30 if is_covered else max_interval_not_covered %}
+      {% set automation_entity_id = this.entity_id %}
+      {{
+      (now() - state_attr(automation_entity_id, 'last_triggered') > timedelta(minutes=min_wait))
+      and
+      ((int(states(external_temperature_numbers[0])) - int(float(states(temperature_sensor_entity)) * 100))|abs > 10)
+
+      or
+      
+      (now() - state_attr(automation_entity_id, 'last_triggered') > timedelta(minutes=max_wait))
+      }}
+  - platform: homeassistant
+    event: start
+condition: []
+action:
+  - service: number.set_value
+    target:
+      entity_id: !input external_temperature_numbers
+    data:
+      value: "{{ int(float(states(temperature_sensor_entity)) * 100) }}"
+mode: single

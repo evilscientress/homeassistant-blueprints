@@ -1,0 +1,54 @@
+blueprint:
+  name: Link Thermostat Temperatures
+  description: Automation blueprint  to link the setpoin of multiple climate enteties. The default delays work well for laggy thermostats like Zigbee thermostats.
+  domain: automation
+  input:
+    thermostats:
+      name: Thermostats
+      description: The thermostats to link together.
+      selector:
+        entity:
+          filter:
+            domain: climate
+          multiple: true
+    activation_delay:
+      name: Activation Delay
+      description: Time for which a changed value needs to be stable until the automation triggers
+      selector:
+        duration:
+      default:
+        hours: 0
+        minutes: 0
+        seconds: 31
+    deadtime:
+      name: Deadtime
+      description: Time to block after the automation has been triggered.
+      selector:
+        duration:
+      default:
+        hours: 0
+        minutes: 0
+        seconds: 0
+trigger:
+  - platform: state
+    entity_id: !input thermostats
+    attribute: temperature
+    for: !input activation_delay
+condition:
+  - condition: template
+    value_template: "{{ state_attr(trigger.entity_id, 'temperature') is not none }}"
+action:
+  - repeat:
+      for_each: !input thermostats
+      sequence:
+        - if:
+          - condition: template
+            value_template: "{{ repeat.item != trigger.entity_id }}"
+          then:
+            - service: climate.set_temperature
+              data:
+                temperature: "{{ state_attr(trigger.entity_id, 'temperature') }}"
+              target:
+                entity_id: "{{ repeat.item }}"
+  - delay: !input deadtime
+mode: single
