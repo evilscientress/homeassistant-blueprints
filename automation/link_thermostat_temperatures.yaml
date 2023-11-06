@@ -2,6 +2,8 @@ blueprint:
   name: Link Thermostat Temperatures
   description: Automation blueprint  to link the setpoin of multiple climate enteties. The default delays work well for laggy thermostats like Zigbee thermostats.
   domain: automation
+  source_url: https://github.com/evilscientress/homeassistant-blueprints/blob/main/automation/link_thermostat_temperatures.yaml
+  author: EvilScientress
   input:
     thermostats:
       name: Thermostats

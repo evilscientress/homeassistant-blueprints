@@ -2,6 +2,8 @@ blueprint:
   name: Ally Load Balancing
   description: Automation blueprint for the load balancing feature of Danfoss Ally Zigbee radiator thermostats.
   domain: automation
+  source_url: https://github.com/evilscientress/homeassistant-blueprints/blob/main/automation/ally_load_balancing.yaml
+  author: EvilScientress
   input:
     load_estimates:
       name: Thermostat Load Estimates
